@@ -56,11 +56,7 @@ namespace SlothEnterprise.ProductApplication.Tests
         [Test]
         public void SubmitApplicationFor_ShouldCallSelectInvoiceService_WhenGetSelectiveInvoiceDiscountProduct()
         {
-            var sellerApplication = new SellerApplication
-                                    {
-                                        Product = _fixture.Build<SelectiveInvoiceDiscount>().Create(),
-                                        CompanyData = CreateCompanyData()
-                                    };
+            var sellerApplication = CreateSellerApplicationWithSelectiveInvoiceDiscount();
 
             _productApplicationService.SubmitApplicationFor(sellerApplication);
 
@@ -76,11 +72,7 @@ namespace SlothEnterprise.ProductApplication.Tests
         public void
             SubmitApplicationFor_ShouldCallConfidentialInvoiceService_WhenGetConfidentialInvoiceDiscountProduct()
         {
-            var sellerApplication = new SellerApplication
-                                    {
-                                        Product = _fixture.Build<ConfidentialInvoiceDiscount>().Create(),
-                                        CompanyData = CreateCompanyData()
-                                    };
+            var sellerApplication = CreateSellerApplicationWithConfidentialInvoiceDiscount();
 
             _productApplicationService.SubmitApplicationFor(sellerApplication);
 
@@ -154,11 +146,7 @@ namespace SlothEnterprise.ProductApplication.Tests
         public void
             SubmitApplicationFor_ShouldReturnCodeOfUnsuccessfulAnswerFromService_WhenConfidentialInvoiceServiceReturnUnsuccessfulAnswer()
         {
-            var sellerApplication = new SellerApplication
-                                    {
-                                        Product = _fixture.Build<ConfidentialInvoiceDiscount>().Create(),
-                                        CompanyData = CreateCompanyData()
-                                    };
+            var sellerApplication = CreateSellerApplicationWithConfidentialInvoiceDiscount();
 
             A.CallTo(
                     () => _confidentialInvoiceService
@@ -173,22 +161,40 @@ namespace SlothEnterprise.ProductApplication.Tests
 
             answer.Should().Be(codeOfUnsuccessfulAnswerFromService);
         }
-        
+
         [Test]
-        public void SubmitApplicationFor_ShouldReturnCodeOfSuccessfulAnswerFromService_WhenConfidentialInvoiceServiceReturnUnsuccessfulAnswer()
+        public void
+            SubmitApplicationFor_ShouldReturnCodeOfSuccessfulAnswerFromService_WhenConfidentialInvoiceServiceReturnUnsuccessfulAnswer()
+        {
+            var sellerApplication = CreateSellerApplicationWithSelectiveInvoiceDiscount();
+
+            _productApplicationService.SubmitApplicationFor(sellerApplication);
+
+
+            var answer = _productApplicationService.SubmitApplicationFor(sellerApplication);
+
+            answer.Should().Be(codeOfSuccessfulAnswerFromService);
+        }
+
+        private SellerApplication CreateSellerApplicationWithSelectiveInvoiceDiscount()
         {
             var sellerApplication = new SellerApplication
                                     {
                                         Product = _fixture.Build<SelectiveInvoiceDiscount>().Create(),
                                         CompanyData = CreateCompanyData()
                                     };
+            return sellerApplication;
+        }
 
-            _productApplicationService.SubmitApplicationFor(sellerApplication);
+        private SellerApplication CreateSellerApplicationWithConfidentialInvoiceDiscount()
+        {
+            var sellerApplication = new SellerApplication
+                                    {
+                                        Product = _fixture.Build<ConfidentialInvoiceDiscount>().Create(),
+                                        CompanyData = CreateCompanyData()
+                                    };
 
-         
-            var answer = _productApplicationService.SubmitApplicationFor(sellerApplication);
-
-            answer.Should().Be(codeOfSuccessfulAnswerFromService);
+            return sellerApplication;
         }
 
         private IApplicationResult CreateSuccessApplicationResult()
