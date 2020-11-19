@@ -1,4 +1,5 @@
-﻿using AutoFixture;
+﻿using System;
+using AutoFixture;
 using FakeItEasy;
 using FluentAssertions;
 using NUnit.Framework;
@@ -106,6 +107,45 @@ namespace SlothEnterprise.ProductApplication.Tests
                         A<CompanyDataRequest>._,
                         A<LoansRequest>._))
                 .MustHaveHappened();
+        }
+
+        [Test]
+        public void SubmitApplicationFor_ShouldThrowArgumentException_WhenGetNullOfCompanyData()
+        {
+            var sellerApplication = new SellerApplication
+                                    {
+                                        Product = _fixture.Build<BusinessLoans>().Create(),
+                                        CompanyData = null
+                                    };
+
+            Assert.Throws(typeof(ArgumentException),
+                () => _productApplicationService.SubmitApplicationFor(sellerApplication));
+        }
+
+        [Test]
+        public void SubmitApplicationFor_ShouldThrowArgumentException_WhenGetNullOfProduct()
+        {
+            var sellerApplication = new SellerApplication
+                                    {
+                                        Product = _fixture.Build<BusinessLoans>().Create(),
+                                        CompanyData = null
+                                    };
+
+            Assert.Throws(typeof(ArgumentException),
+                () => _productApplicationService.SubmitApplicationFor(sellerApplication));
+        }
+
+        [Test]
+        public void SubmitApplicationFor_ShouldThrowArgumentException_WhenGetProductTypeIsUnknown()
+        {
+            var sellerApplication = new SellerApplication
+                                    {
+                                        Product = A.Fake<IProduct>(),
+                                        CompanyData = null
+                                    };
+
+            Assert.Throws(typeof(ArgumentException),
+                () => _productApplicationService.SubmitApplicationFor(sellerApplication));
         }
 
         private IApplicationResult CreateSuccessApplicationResult()
