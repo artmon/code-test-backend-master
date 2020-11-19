@@ -1,3 +1,3 @@
 ### Main areas of concern:
-* Intrfaces and clases (dependency inversion principle)
-
+* Interfaces, classes  (dependency inversion principle)
+* Code duplication

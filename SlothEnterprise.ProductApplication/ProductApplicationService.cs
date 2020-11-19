@@ -32,16 +32,12 @@ namespace SlothEnterprise.ProductApplication
                     sid.AdvancePercentage);
             }
 
+            var companyDataRequest = GetCompanyDataRequest(application.CompanyData);
+
             if (application.Product is ConfidentialInvoiceDiscount cid)
             {
                 var result = _confidentialInvoiceWebService.SubmitApplicationFor(
-                    new CompanyDataRequest
-                    {
-                        CompanyFounded = application.CompanyData.Founded,
-                        CompanyNumber = application.CompanyData.Number,
-                        CompanyName = application.CompanyData.Name,
-                        DirectorName = application.CompanyData.DirectorName
-                    },
+                    companyDataRequest,
                     cid.TotalLedgerNetworth,
                     cid.AdvancePercentage,
                     cid.VatRate);
@@ -51,16 +47,8 @@ namespace SlothEnterprise.ProductApplication
 
             if (application.Product is BusinessLoans loans)
             {
-                var result = _businessLoansService.SubmitApplicationFor(new CompanyDataRequest
-                                                                        {
-                                                                            CompanyFounded = application.CompanyData
-                                                                                .Founded,
-                                                                            CompanyNumber = application.CompanyData
-                                                                                .Number,
-                                                                            CompanyName = application.CompanyData.Name,
-                                                                            DirectorName = application.CompanyData
-                                                                                .DirectorName
-                                                                        },
+                var result = _businessLoansService.SubmitApplicationFor(
+                    companyDataRequest,
                     new LoansRequest
                     {
                         InterestRatePerAnnum = loans.InterestRatePerAnnum,
@@ -70,6 +58,17 @@ namespace SlothEnterprise.ProductApplication
             }
 
             throw new InvalidOperationException();
+        }
+
+        private static CompanyDataRequest GetCompanyDataRequest(ISellerCompanyData companyData)
+        {
+            return new CompanyDataRequest
+                   {
+                       CompanyFounded = companyData.Founded,
+                       CompanyNumber = companyData.Number,
+                       CompanyName = companyData.Name,
+                       DirectorName = companyData.DirectorName
+                   };
         }
     }
 }
