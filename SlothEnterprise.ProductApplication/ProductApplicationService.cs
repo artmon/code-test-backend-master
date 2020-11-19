@@ -24,6 +24,12 @@ namespace SlothEnterprise.ProductApplication
 
         public int SubmitApplicationFor(ISellerApplication application)
         {
+            if (application?.CompanyData == null)
+                throw new ArgumentException(nameof(application.CompanyData));
+
+            if (application.Product == null)
+                throw new ArgumentException(nameof(application.Product));
+
             if (application.Product is SelectiveInvoiceDiscount sid)
             {
                 return _selectInvoiceService.SubmitApplicationFor(
@@ -42,7 +48,7 @@ namespace SlothEnterprise.ProductApplication
                     cid.AdvancePercentage,
                     cid.VatRate);
 
-                return (result.Success) ? result.ApplicationId ?? -1 : -1;
+                return result.Success ? result.ApplicationId ?? -1 : -1;
             }
 
             if (application.Product is BusinessLoans loans)
@@ -54,7 +60,7 @@ namespace SlothEnterprise.ProductApplication
                         InterestRatePerAnnum = loans.InterestRatePerAnnum,
                         LoanAmount = loans.LoanAmount
                     });
-                return (result.Success) ? result.ApplicationId ?? -1 : -1;
+                return result.Success ? result.ApplicationId ?? -1 : -1;
             }
 
             throw new InvalidOperationException();
