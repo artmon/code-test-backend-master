@@ -1,4 +1,6 @@
-﻿namespace SlothEnterprise.ProductApplication.Products
+﻿using SlothEnterprise.ProductApplication.Сonstants;
+
+namespace SlothEnterprise.ProductApplication.Products
 {
     public class ConfidentialInvoiceDiscount : IProduct
     {
