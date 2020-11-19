@@ -7,7 +7,7 @@ using SlothEnterprise.ProductApplication.Products;
 
 namespace SlothEnterprise.ProductApplication
 {
-    internal class ProductApplicationService : IProductApplicationService
+    public class ProductApplicationService : IProductApplicationService
     {
         private static readonly int codeOfWrongAnswerFromService = -1;
         private readonly ISelectInvoiceService _selectInvoiceService;
@@ -61,6 +61,19 @@ namespace SlothEnterprise.ProductApplication
                 sid.AdvancePercentage);
         }
 
+        private int CallConfidentialInvoiceWebService(ISellerCompanyData companyData, ConfidentialInvoiceDiscount cid)
+        {
+            var companyDataRequest = GetCompanyDataRequest(companyData);
+
+            var result = _confidentialInvoiceWebService.SubmitApplicationFor(
+                companyDataRequest,
+                cid.TotalLedgerNetworth,
+                cid.AdvancePercentage,
+                cid.VatRate);
+
+            return ProcessApplicationResult(result);
+        }
+
         private int CallBusinessLoansService(ISellerCompanyData companyData, BusinessLoans loans)
         {
             var companyDataRequest = GetCompanyDataRequest(companyData);
@@ -72,19 +85,6 @@ namespace SlothEnterprise.ProductApplication
                     InterestRatePerAnnum = loans.InterestRatePerAnnum,
                     LoanAmount = loans.LoanAmount
                 });
-
-            return ProcessApplicationResult(result);
-        }
-
-        private int CallConfidentialInvoiceWebService(ISellerCompanyData companyData, ConfidentialInvoiceDiscount cid)
-        {
-            var companyDataRequest = GetCompanyDataRequest(companyData);
-
-            var result = _confidentialInvoiceWebService.SubmitApplicationFor(
-                companyDataRequest,
-                cid.TotalLedgerNetworth,
-                cid.AdvancePercentage,
-                cid.VatRate);
 
             return ProcessApplicationResult(result);
         }
