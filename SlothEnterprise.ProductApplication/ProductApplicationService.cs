@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using SlothEnterprise.External;
 using SlothEnterprise.External.V1;
 using SlothEnterprise.ProductApplication.Applications;
@@ -8,6 +9,7 @@ namespace SlothEnterprise.ProductApplication
 {
     internal class ProductApplicationService : IProductApplicationService
     {
+        private static readonly int codeOfWrongAnswerFromService = -1;
         private readonly ISelectInvoiceService _selectInvoiceService;
         private readonly IConfidentialInvoiceService _confidentialInvoiceWebService;
         private readonly IBusinessLoansService _businessLoansService;
@@ -30,40 +32,61 @@ namespace SlothEnterprise.ProductApplication
             if (application.Product == null)
                 throw new ArgumentException(nameof(application.Product));
 
-            if (application.Product is SelectiveInvoiceDiscount sid)
+            try
             {
-                return _selectInvoiceService.SubmitApplicationFor(
-                    application.CompanyData.Number.ToString(),
-                    sid.InvoiceAmount,
-                    sid.AdvancePercentage);
+                switch (application.Product)
+                {
+                    case SelectiveInvoiceDiscount sid:
+                        return CallSelectInvoiceService(application.CompanyData.Number, sid);
+                    case ConfidentialInvoiceDiscount cid:
+                        return CallConfidentialInvoiceWebService(application.CompanyData, cid);
+                    case BusinessLoans loans:
+                        return CallBusinessLoansService(application.CompanyData, loans);
+                    default:
+                        throw new ArgumentException(nameof(application.Product));
+                }
             }
-
-            var companyDataRequest = GetCompanyDataRequest(application.CompanyData);
-
-            if (application.Product is ConfidentialInvoiceDiscount cid)
+            catch (Exception e)
             {
-                var result = _confidentialInvoiceWebService.SubmitApplicationFor(
-                    companyDataRequest,
-                    cid.TotalLedgerNetworth,
-                    cid.AdvancePercentage,
-                    cid.VatRate);
-
-                return result.Success ? result.ApplicationId ?? -1 : -1;
+                //TODO Log exception
+                throw;
             }
+        }
 
-            if (application.Product is BusinessLoans loans)
-            {
-                var result = _businessLoansService.SubmitApplicationFor(
-                    companyDataRequest,
-                    new LoansRequest
-                    {
-                        InterestRatePerAnnum = loans.InterestRatePerAnnum,
-                        LoanAmount = loans.LoanAmount
-                    });
-                return result.Success ? result.ApplicationId ?? -1 : -1;
-            }
+        private int CallSelectInvoiceService(int companyNumber, SelectiveInvoiceDiscount sid)
+        {
+            return _selectInvoiceService.SubmitApplicationFor(
+                companyNumber.ToString(),
+                sid.InvoiceAmount,
+                sid.AdvancePercentage);
+        }
 
-            throw new InvalidOperationException();
+        private int CallBusinessLoansService(ISellerCompanyData companyData, BusinessLoans loans)
+        {
+            var companyDataRequest = GetCompanyDataRequest(companyData);
+
+            var result = _businessLoansService.SubmitApplicationFor(
+                companyDataRequest,
+                new LoansRequest
+                {
+                    InterestRatePerAnnum = loans.InterestRatePerAnnum,
+                    LoanAmount = loans.LoanAmount
+                });
+
+            return ProcessApplicationResult(result);
+        }
+
+        private int CallConfidentialInvoiceWebService(ISellerCompanyData companyData, ConfidentialInvoiceDiscount cid)
+        {
+            var companyDataRequest = GetCompanyDataRequest(companyData);
+
+            var result = _confidentialInvoiceWebService.SubmitApplicationFor(
+                companyDataRequest,
+                cid.TotalLedgerNetworth,
+                cid.AdvancePercentage,
+                cid.VatRate);
+
+            return ProcessApplicationResult(result);
         }
 
         private static CompanyDataRequest GetCompanyDataRequest(ISellerCompanyData companyData)
@@ -75,6 +98,26 @@ namespace SlothEnterprise.ProductApplication
                        CompanyName = companyData.Name,
                        DirectorName = companyData.DirectorName
                    };
+        }
+
+        private int ProcessApplicationResult(IApplicationResult result)
+        {
+            return CheckResult(result) && result.ApplicationId.HasValue
+                ? result.ApplicationId.Value
+                : codeOfWrongAnswerFromService;
+        }
+
+        private bool CheckResult(IApplicationResult result)
+        {
+            if (result == null)
+                return false;
+
+            if (result.Errors?.Any() == true)
+            {
+                //TODO log errors
+            }
+
+            return result.Success;
         }
     }
 }
