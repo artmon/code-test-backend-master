@@ -2,7 +2,6 @@
 
 namespace SlothEnterprise.ProductApplication.Applications
 {
-
     public interface ISellerApplication
     {
         IProduct Product { get; set; }
