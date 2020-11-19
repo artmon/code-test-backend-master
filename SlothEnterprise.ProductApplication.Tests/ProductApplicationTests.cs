@@ -14,6 +14,8 @@ namespace SlothEnterprise.ProductApplication.Tests
     public class ProductApplicationTests
     {
         private readonly Fixture _fixture = new Fixture();
+        private static readonly int codeOfUnsuccessfulAnswerFromService = -1;
+        private static readonly int codeOfSuccessfulAnswerFromService = 1;
         private ISelectInvoiceService _selectInvoiceService;
         private IConfidentialInvoiceService _confidentialInvoiceService;
         private IBusinessLoansService _businessLoansService;
@@ -34,7 +36,7 @@ namespace SlothEnterprise.ProductApplication.Tests
             A.CallTo(() => _selectInvoiceService.SubmitApplicationFor(
                 A<string>._,
                 A<decimal>._,
-                A<decimal>._)).Returns(1);
+                A<decimal>._)).Returns(codeOfSuccessfulAnswerFromService);
 
             A.CallTo(
                 () => _confidentialInvoiceService.SubmitApplicationFor(
@@ -148,10 +150,58 @@ namespace SlothEnterprise.ProductApplication.Tests
                 () => _productApplicationService.SubmitApplicationFor(sellerApplication));
         }
 
+        [Test]
+        public void
+            SubmitApplicationFor_ShouldReturnCodeOfUnsuccessfulAnswerFromService_WhenConfidentialInvoiceServiceReturnUnsuccessfulAnswer()
+        {
+            var sellerApplication = new SellerApplication
+                                    {
+                                        Product = _fixture.Build<ConfidentialInvoiceDiscount>().Create(),
+                                        CompanyData = CreateCompanyData()
+                                    };
+
+            A.CallTo(
+                    () => _confidentialInvoiceService
+                        .SubmitApplicationFor(
+                            A<CompanyDataRequest>._,
+                            A<decimal>._,
+                            A<decimal>._,
+                            A<decimal>._))
+                .Returns(CreateUnsuccessfulApplicationResult());
+
+            var answer = _productApplicationService.SubmitApplicationFor(sellerApplication);
+
+            answer.Should().Be(codeOfUnsuccessfulAnswerFromService);
+        }
+        
+        [Test]
+        public void SubmitApplicationFor_ShouldReturnCodeOfSuccessfulAnswerFromService_WhenConfidentialInvoiceServiceReturnUnsuccessfulAnswer()
+        {
+            var sellerApplication = new SellerApplication
+                                    {
+                                        Product = _fixture.Build<SelectiveInvoiceDiscount>().Create(),
+                                        CompanyData = CreateCompanyData()
+                                    };
+
+            _productApplicationService.SubmitApplicationFor(sellerApplication);
+
+         
+            var answer = _productApplicationService.SubmitApplicationFor(sellerApplication);
+
+            answer.Should().Be(codeOfSuccessfulAnswerFromService);
+        }
+
         private IApplicationResult CreateSuccessApplicationResult()
         {
             var applicationResult = A.Fake<IApplicationResult>();
             applicationResult.Success = true;
+            return applicationResult;
+        }
+
+        private IApplicationResult CreateUnsuccessfulApplicationResult()
+        {
+            var applicationResult = A.Fake<IApplicationResult>();
+            applicationResult.Success = false;
             return applicationResult;
         }
 

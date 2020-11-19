@@ -9,7 +9,7 @@ namespace SlothEnterprise.ProductApplication
 {
     public class ProductApplicationService : IProductApplicationService
     {
-        private static readonly int codeOfWrongAnswerFromService = -1;
+        private static readonly int codeOfUnsuccessfulAnswerFromService = -1;
         private readonly ISelectInvoiceService _selectInvoiceService;
         private readonly IConfidentialInvoiceService _confidentialInvoiceWebService;
         private readonly IBusinessLoansService _businessLoansService;
@@ -104,7 +104,7 @@ namespace SlothEnterprise.ProductApplication
         {
             return CheckResult(result) && result.ApplicationId.HasValue
                 ? result.ApplicationId.Value
-                : codeOfWrongAnswerFromService;
+                : codeOfUnsuccessfulAnswerFromService;
         }
 
         private bool CheckResult(IApplicationResult result)
